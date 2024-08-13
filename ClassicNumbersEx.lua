@@ -3,8 +3,8 @@ local AceAddon = LibStub("AceAddon-3.0");
 local LibEasing = LibStub("LibEasing-1.0");
 local SharedMedia = LibStub("LibSharedMedia-3.0");
 
-ClassicNumbers = AceAddon:NewAddon("ClassicNumbers", "AceConsole-3.0", "AceEvent-3.0");
-ClassicNumbers.frame = CreateFrame("Frame", nil, UIParent);
+ClassicNumbersEx = AceAddon:NewAddon("ClassicNumbersEx", "AceConsole-3.0", "AceEvent-3.0");
+ClassicNumbersEx.frame = CreateFrame("Frame", nil, UIParent);
 
 
 -- LOCALS --
@@ -100,11 +100,11 @@ local function getFontString()
     if (next(fontStringCache)) then
         fontString = table.remove(fontStringCache);
     else
-        fontString = ClassicNumbers.frame:CreateFontString();
+        fontString = ClassicNumbersEx.frame:CreateFontString();
     end
 
-    fontString:SetParent(ClassicNumbers.frame);
-    fontString:SetFont(getFontPath(ClassicNumbers.db.global.font), 15);
+    fontString:SetParent(ClassicNumbersEx.frame);
+    fontString:SetFont(getFontPath(ClassicNumbersEx.db.global.font), 15);
     fontString:SetShadowOffset(2,-2)
     fontString:SetAlpha(1);
     fontString:SetDrawLayer("BACKGROUND", -1);
@@ -180,8 +180,8 @@ local function recycleFontString(fontString)
 end
 
 -- CORE --
-function ClassicNumbers:OnInitialize()
-    self.db = LibStub("AceDB-3.0"):New("ClassicNumbersDB", defaults, true);
+function ClassicNumbersEx:OnInitialize()
+    self.db = LibStub("AceDB-3.0"):New("ClassicNumbersExDB", defaults, true);
 	
     self:RegisterChatCommand("classicnumbers", "OpenMenu");
     self:RegisterChatCommand("classicnumber", "OpenMenu");
@@ -195,7 +195,7 @@ function ClassicNumbers:OnInitialize()
 end
 
 
-function ClassicNumbers:OnEnable()
+function ClassicNumbersEx:OnEnable()
     playerGUID = UnitGUID("player");
 
     self:RegisterEvent("NAME_PLATE_UNIT_ADDED");
@@ -205,7 +205,7 @@ function ClassicNumbers:OnEnable()
     self.db.global.enabled = true;
 end
 
-function ClassicNumbers:OnDisable()
+function ClassicNumbersEx:OnDisable()
     self:UnregisterAllEvents();
 
     for fontString, _ in pairs(animating) do
@@ -370,11 +370,11 @@ local function AnimationOnUpdate()
         end
     else
         -- nothing in the animation list, so just kill the onupdate
-        ClassicNumbers.frame:SetScript("OnUpdate", nil);
+        ClassicNumbersEx.frame:SetScript("OnUpdate", nil);
     end
 end
 
-function ClassicNumbers:Animate(fontString, anchorFrame, animation)
+function ClassicNumbersEx:Animate(fontString, anchorFrame, animation)
     fontString.animatingStartTime = GetTime();
     fontString.anchorFrame = anchorFrame == player and UIParent or anchorFrame;
 	
@@ -388,21 +388,21 @@ function ClassicNumbers:Animate(fontString, anchorFrame, animation)
 	end
 	
     -- start onupdate if it's not already running
-    if (ClassicNumbers.frame:GetScript("OnUpdate") == nil) then
-        ClassicNumbers.frame:SetScript("OnUpdate", AnimationOnUpdate);
+    if (ClassicNumbersEx.frame:GetScript("OnUpdate") == nil) then
+        ClassicNumbersEx.frame:SetScript("OnUpdate", AnimationOnUpdate);
     end
 end
 
 
 -- EVENTS --
-function ClassicNumbers:NAME_PLATE_UNIT_ADDED(event, unitID)
+function ClassicNumbersEx:NAME_PLATE_UNIT_ADDED(event, unitID)
     local guid = UnitGUID(unitID);
 
     unitToGuid[unitID] = guid;
     guidToUnit[guid] = unitID;
 end
 
-function ClassicNumbers:NAME_PLATE_UNIT_REMOVED(event, unitID)
+function ClassicNumbersEx:NAME_PLATE_UNIT_REMOVED(event, unitID)
     local guid = unitToGuid[unitID];
 
     unitToGuid[unitID] = nil;
@@ -415,10 +415,10 @@ function ClassicNumbers:NAME_PLATE_UNIT_REMOVED(event, unitID)
     end
 end
 
-function ClassicNumbers:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _, destGUID, _, _, _, ...)
-	if playerGUID == sourceGUID or (ClassicNumbers.db.global.personal and playerGUID == destGUID) then -- Player events
+function ClassicNumbersEx:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _, destGUID, _, _, _, ...)
+	if playerGUID == sourceGUID or (ClassicNumbersEx.db.global.personal and playerGUID == destGUID) then -- Player events
 		local destUnit = guidToUnit[destGUID];
-		if (destUnit) or (destGUID == playerGUID and ClassicNumbers.db.global.personal) then
+		if (destUnit) or (destGUID == playerGUID and ClassicNumbersEx.db.global.personal) then
 			if (string.find(clue, "_DAMAGE")) then
 				local spellID, spellName, spellSchool, amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand;
 				if (string.find(clue, "SWING")) then
@@ -433,7 +433,7 @@ function ClassicNumbers:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _, 
 		end
 	elseif (bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_GUARDIAN) > 0 or bit.band(sourceFlags, COMBATLOG_OBJECT_TYPE_PET) > 0)	and bit.band(sourceFlags, COMBATLOG_OBJECT_AFFILIATION_MINE) > 0 then -- Pet/Guardian events
 		local destUnit = guidToUnit[destGUID];
-		if (destUnit) or (destGUID == playerGUID and ClassicNumbers.db.global.personal) then
+		if (destUnit) or (destGUID == playerGUID and ClassicNumbersEx.db.global.personal) then
 			if (string.find(clue, "_DAMAGE")) then
 				local spellID, spellName, spellSchool, amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand;
 				if (string.find(clue, "SWING")) then
@@ -449,8 +449,8 @@ function ClassicNumbers:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _, 
 	end
 end
 
-function ClassicNumbers:COMBAT_LOG_EVENT_UNFILTERED ()
-	return ClassicNumbers:CombatFilter(CombatLogGetCurrentEventInfo())
+function ClassicNumbersEx:COMBAT_LOG_EVENT_UNFILTERED ()
+	return ClassicNumbersEx:CombatFilter(CombatLogGetCurrentEventInfo())
 end
 
 
@@ -461,7 +461,7 @@ local function commaSeperate(number)
     return minus..int:reverse():gsub("^,", "")..fraction;
 end
 
-function ClassicNumbers:DamageEvent(guid, spellID, amount, school, crit, spellName)
+function ClassicNumbersEx:DamageEvent(guid, spellID, amount, school, crit, spellName)
     local text, animation, pow, size, icon;
 	local autoattack = not spellID or spellID == 75;
 
@@ -470,7 +470,7 @@ function ClassicNumbers:DamageEvent(guid, spellID, amount, school, crit, spellNa
     local unit = guidToUnit[guid];
     local isTarget = unit and UnitIsUnit(unit, "target");
 
-	size = ClassicNumbers.db.global.size;	    
+	size = ClassicNumbersEx.db.global.size;	    
     if (crit) and playerGUID ~= guid then
         size = self.db.global.critSize;      
     end
@@ -528,7 +528,7 @@ function ClassicNumbers:DamageEvent(guid, spellID, amount, school, crit, spellNa
 	self:DisplayText(guid, text, size, animation, pow, amount);
 end
 
-function ClassicNumbers:DisplayText(guid, text, size, animation, pow, amount)
+function ClassicNumbersEx:DisplayText(guid, text, size, animation, pow, amount)
     local fontString;
     local unit = guidToUnit[guid];
     local nameplate;
@@ -550,52 +550,52 @@ function ClassicNumbers:DisplayText(guid, text, size, animation, pow, amount)
     fontString:SetText(fontString.text);
 
     fontString.fontSize = size;
-    fontString:SetFont(getFontPath(ClassicNumbers.db.global.font), fontString.fontSize, ClassicNumbers.db.global.fontFlag);
+    fontString:SetFont(getFontPath(ClassicNumbersEx.db.global.font), fontString.fontSize, ClassicNumbersEx.db.global.fontFlag);
 	fontString:SetShadowOffset(2,-2)
     fontString.startHeight = fontString:GetStringHeight();
     fontString.pow = pow;
 	fontString.fontHeight = size;
 	fontString.amount = amount
 	fontString.textWidth = size/2 * math.log10(amount);
-	fontString.maxCritNumbersPerTarget = ClassicNumbers.db.global.maxCritNumbersPerTarget;
-	fontString.critsAlpha = ClassicNumbers.db.global.critsAlpha;
-	fontString.normalHitsAlpha = ClassicNumbers.db.global.normalHitsAlpha;
-	fontString.nonCritsOffsetX = ClassicNumbers.db.global.nonCritsOffsetX;
-	fontString.nonCritsOffsetY = ClassicNumbers.db.global.nonCritsOffsetY;
-	fontString.critsOffsetX = ClassicNumbers.db.global.critsOffsetX;
-	fontString.critsOffsetY = ClassicNumbers.db.global.critsOffsetY;
-	fontString.nonCritAnimationDuration = ClassicNumbers.db.global.nonCritAnimationDuration;
-	fontString.critAnimationDuration = ClassicNumbers.db.global.critAnimationDuration;
-	fontString.scrollSpeed = ClassicNumbers.db.global.scrollSpeed
-	fontString.scrollDistance = ClassicNumbers.db.global.scrollDistance;
-	fontString.hideNonCritsIfBigCritChain = ClassicNumbers.db.global.hideNonCritsIfBigCritChain;	
-	fontString.displayBiggestCritInCenterOfTheChain = ClassicNumbers.db.global.displayBiggestCritInCenterOfTheChain;
-	fontString.biggestCritDisplaysLargerThanOtherOnes = ClassicNumbers.db.global.biggestCritDisplaysLargerThanOtherOnes;
+	fontString.maxCritNumbersPerTarget = ClassicNumbersEx.db.global.maxCritNumbersPerTarget;
+	fontString.critsAlpha = ClassicNumbersEx.db.global.critsAlpha;
+	fontString.normalHitsAlpha = ClassicNumbersEx.db.global.normalHitsAlpha;
+	fontString.nonCritsOffsetX = ClassicNumbersEx.db.global.nonCritsOffsetX;
+	fontString.nonCritsOffsetY = ClassicNumbersEx.db.global.nonCritsOffsetY;
+	fontString.critsOffsetX = ClassicNumbersEx.db.global.critsOffsetX;
+	fontString.critsOffsetY = ClassicNumbersEx.db.global.critsOffsetY;
+	fontString.nonCritAnimationDuration = ClassicNumbersEx.db.global.nonCritAnimationDuration;
+	fontString.critAnimationDuration = ClassicNumbersEx.db.global.critAnimationDuration;
+	fontString.scrollSpeed = ClassicNumbersEx.db.global.scrollSpeed
+	fontString.scrollDistance = ClassicNumbersEx.db.global.scrollDistance;
+	fontString.hideNonCritsIfBigCritChain = ClassicNumbersEx.db.global.hideNonCritsIfBigCritChain;	
+	fontString.displayBiggestCritInCenterOfTheChain = ClassicNumbersEx.db.global.displayBiggestCritInCenterOfTheChain;
+	fontString.biggestCritDisplaysLargerThanOtherOnes = ClassicNumbersEx.db.global.biggestCritDisplaysLargerThanOtherOnes;
 	
 	--Sound effects
-	-- if (ClassicNumbers.db.global.critSoundEnabled and pow and amount > ClassicNumbers.db.global.critSoundThreshold and (not ClassicNumbers.db.global.hugeCritSoundEnabled or amount < ClassicNumbers.db.global.hugeCritSoundThreshold))
+	-- if (ClassicNumbersEx.db.global.critSoundEnabled and pow and amount > ClassicNumbersEx.db.global.critSoundThreshold and (not ClassicNumbersEx.db.global.hugeCritSoundEnabled or amount < ClassicNumbersEx.db.global.hugeCritSoundThreshold))
 	-- then
-		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbers\\Media\\Sounds\\Critical.ogg", ClassicNumbers.db.global.critSoundChannel)
+		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbersEx\\Media\\Sounds\\Critical.ogg", ClassicNumbersEx.db.global.critSoundChannel)
 	-- end
 	
-	-- if (ClassicNumbers.db.global.hugeCritSoundEnabled and pow and amount > ClassicNumbers.db.global.hugeCritSoundThreshold and (not ClassicNumbers.db.global.monsterCritSoundEnabled or amount < ClassicNumbers.db.global.monsterCritSoundThreshold))
+	-- if (ClassicNumbersEx.db.global.hugeCritSoundEnabled and pow and amount > ClassicNumbersEx.db.global.hugeCritSoundThreshold and (not ClassicNumbersEx.db.global.monsterCritSoundEnabled or amount < ClassicNumbersEx.db.global.monsterCritSoundThreshold))
 	-- then
-		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbers\\Media\\Sounds\\HugeCritical.ogg", ClassicNumbers.db.global.hugeCritSoundChannel)
+		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbersEx\\Media\\Sounds\\HugeCritical.ogg", ClassicNumbersEx.db.global.hugeCritSoundChannel)
 	-- end
 
-	-- if (ClassicNumbers.db.global.monsterCritSoundEnabled and pow and amount > ClassicNumbers.db.global.monsterCritSoundThreshold)
+	-- if (ClassicNumbersEx.db.global.monsterCritSoundEnabled and pow and amount > ClassicNumbersEx.db.global.monsterCritSoundThreshold)
 	-- then
-		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbers\\Media\\Sounds\\MonsterCritical.ogg", ClassicNumbers.db.global.monsterCritSoundChannel)
+		-- PlaySoundFile("Interface\\AddOns\\ClassicNumbersEx\\Media\\Sounds\\MonsterCritical.ogg", ClassicNumbersEx.db.global.monsterCritSoundChannel)
 	-- end
 	
-	if (ClassicNumbers.db.global.critSoundEnabled and pow and amount > ClassicNumbers.db.global.critSoundThreshold and (not ClassicNumbers.db.global.hugeCritSoundEnabled or amount < ClassicNumbers.db.global.hugeCritSoundThreshold))
+	if (ClassicNumbersEx.db.global.critSoundEnabled and pow and amount > ClassicNumbersEx.db.global.critSoundThreshold and (not ClassicNumbersEx.db.global.hugeCritSoundEnabled or amount < ClassicNumbersEx.db.global.hugeCritSoundThreshold))
 	then
-		PlaySoundFile("Interface\\AddOns\\ClassicNumbers\\Media\\Sounds\\Critical.ogg", ClassicNumbers.db.global.critSoundChannel)
+		PlaySoundFile("Interface\\AddOns\\ClassicNumbersEx\\Media\\Sounds\\Critical.ogg", ClassicNumbersEx.db.global.critSoundChannel)
 	end
 	
-	if (ClassicNumbers.db.global.hugeCritSoundEnabled and pow and amount > ClassicNumbers.db.global.hugeCritSoundThreshold)
+	if (ClassicNumbersEx.db.global.hugeCritSoundEnabled and pow and amount > ClassicNumbersEx.db.global.hugeCritSoundThreshold)
 	then
-		PlaySoundFile("Interface\\AddOns\\ClassicNumbers\\Media\\Sounds\\HugeCritical.ogg", ClassicNumbers.db.global.hugeCritSoundChannel)
+		PlaySoundFile("Interface\\AddOns\\ClassicNumbersEx\\Media\\Sounds\\HugeCritical.ogg", ClassicNumbersEx.db.global.hugeCritSoundChannel)
 	end
 	
 	if (self.db.global.useLegacyOverlapHandler) then
@@ -616,7 +616,7 @@ end
 -------------
 local menu = {
     name = "Classic Numbers",
-    handler = ClassicNumbers,
+    handler = ClassicNumbersEx,
     type = 'group',
     args = {
         enable = {
@@ -624,7 +624,7 @@ local menu = {
             name = "Enable",
             desc = "If the addon is enabled.",
             get = "IsEnabled",
-            set = function(_, newValue) if (not newValue) then ClassicNumbers:Disable(); else ClassicNumbers:Enable(); end end,
+            set = function(_, newValue) if (not newValue) then ClassicNumbersEx:Disable(); else ClassicNumbersEx:Enable(); end end,
             order = 1,
             width = "full",
         },
@@ -650,14 +650,14 @@ local menu = {
             name = "Text Style",
             order = 3,
             inline = true,
-            disabled = function() return not ClassicNumbers.db.global.enabled; end;
+            disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {		
 				truncateBigNumbers = {
 					type = 'toggle',
 					name = "Truncate big numbers",
 					desc = "Example : a 1200 hit will be displayed as 1.2k",
-					get = function() return ClassicNumbers.db.global.truncate; end,
-					set = function(_, newValue) ClassicNumbers.db.global.truncate = newValue end,
+					get = function() return ClassicNumbersEx.db.global.truncate; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.truncate = newValue end,
 					order = 1,
 					width = "full",
 				},
@@ -665,8 +665,8 @@ local menu = {
 					type = 'toggle',
 					name = "Comma separate numbers",
 					desc = "Example : a 1200 hit will be displayed as 1,200. Classic wow don't use commas",
-					get = function() return ClassicNumbers.db.global.commaSeperate; end,
-					set = function(_, newValue) ClassicNumbers.db.global.commaSeperate = newValue end,
+					get = function() return ClassicNumbersEx.db.global.commaSeperate; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.commaSeperate = newValue end,
 					order = 2,
 					width = "full",
 				},
@@ -674,8 +674,8 @@ local menu = {
 					type = 'toggle',
 					name = "Use damage school colors",
 					desc = "Fire damage will be orange, frost damage will be blue, etc... if disabled, all abilities damage will be yellow",
-					get = function() return ClassicNumbers.db.global.useDamageSchoolColors; end,
-					set = function(_, newValue) ClassicNumbers.db.global.useDamageSchoolColors = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.useDamageSchoolColors; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.useDamageSchoolColors = newValue; end,
 					order = 3,
 					width = "full",
 				},
@@ -683,8 +683,8 @@ local menu = {
 					type = 'toggle',
 					name = "Use legacy overlap handler",
 					desc = "If enabled -> non crits will behave exactly as they did when the addon was first released, if disabled -> non crits will be less likely to overlap",
-					get = function() return ClassicNumbers.db.global.useLegacyOverlapHandler; end,
-					set = function(_, newValue) ClassicNumbers.db.global.useLegacyOverlapHandler = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.useLegacyOverlapHandler; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.useLegacyOverlapHandler = newValue; end,
 					order = 4,
 					width = "full",
 				},
@@ -694,8 +694,8 @@ local menu = {
                     name = "Font style",
                     order = 5,
                     values = AceGUIWidgetLSMlists.font,
-                    set = function(_, newValue) ClassicNumbers.db.global.font = newValue; end,
-                    get = function() return ClassicNumbers.db.global.font; end,
+                    set = function(_, newValue) ClassicNumbersEx.db.global.font = newValue; end,
+                    get = function() return ClassicNumbersEx.db.global.font; end,
                 },
 			}
 		},
@@ -705,7 +705,7 @@ local menu = {
             name = "Non critical text options",
             order = 4,
             inline = true,
-            disabled = function() return not ClassicNumbers.db.global.enabled; end;
+            disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
 				size = {
 					type = 'range',
@@ -714,8 +714,8 @@ local menu = {
 					min = 0,
 					max = 72,
 					step = 4,
-					get = function() return ClassicNumbers.db.global.size; end,
-					set = function(_, newValue) ClassicNumbers.db.global.size = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.size; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.size = newValue; end,
 					order = 1,
 				},			
 				nonCritsOffsetX = {
@@ -725,8 +725,8 @@ local menu = {
 					min = -150,
 					max = 150,
 					step = 10,
-					get = function() return ClassicNumbers.db.global.nonCritsOffsetX; end,
-					set = function(_, newValue) ClassicNumbers.db.global.nonCritsOffsetX = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.nonCritsOffsetX; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.nonCritsOffsetX = newValue; end,
 					order = 2,
 				},			
 				nonCritsOffsetY = {
@@ -736,8 +736,8 @@ local menu = {
 					min = -150,
 					max = 150,
 					step = 10,
-					get = function() return ClassicNumbers.db.global.nonCritsOffsetY; end,
-					set = function(_, newValue) ClassicNumbers.db.global.nonCritsOffsetY = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.nonCritsOffsetY; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.nonCritsOffsetY = newValue; end,
 					order = 3,
 				},
 				scrollDistance = {
@@ -747,8 +747,8 @@ local menu = {
 					min = -100,
 					max = 100,
 					step = 10,
-					get = function() return ClassicNumbers.db.global.scrollDistance; end,
-					set = function(_, newValue) ClassicNumbers.db.global.scrollDistance = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.scrollDistance; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.scrollDistance = newValue; end,
 					order = 4,
 				},
 				normalHitsAlpha = {
@@ -758,8 +758,8 @@ local menu = {
 					min = 0,
 					max = 1,
 					step = 0.1,
-					get = function() return ClassicNumbers.db.global.normalHitsAlpha; end,
-					set = function(_, newValue) ClassicNumbers.db.global.normalHitsAlpha = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.normalHitsAlpha; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.normalHitsAlpha = newValue; end,
 					order = 5,
 				},
 				nonCritAnimationDuration = {
@@ -768,8 +768,8 @@ local menu = {
 					min = 0,
 					max = 5,
 					step = 0.25,
-					get = function() return ClassicNumbers.db.global.nonCritAnimationDuration; end,
-					set = function(_, newValue) ClassicNumbers.db.global.nonCritAnimationDuration = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.nonCritAnimationDuration; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.nonCritAnimationDuration = newValue; end,
 					order = 6,
 				},
 				smallHitsFilter = {
@@ -777,10 +777,10 @@ local menu = {
 					name = "Small hits filter",
 					desc = "Hide numbers below this value",
 					min = 0,
-					max = 999999,
+					max = 9999999,
 					step = 50,
-					get = function() return ClassicNumbers.db.global.smallHitsFilter; end,
-					set = function(_, newValue) ClassicNumbers.db.global.smallHitsFilter = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.smallHitsFilter; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.smallHitsFilter = newValue; end,
 					order = 7,
 				},	
 			}
@@ -791,14 +791,14 @@ local menu = {
             name = "Critical text options",
             order = 5,
             inline = true,
-            disabled = function() return not ClassicNumbers.db.global.enabled; end;
+            disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
 				hideNonCritsIfBigCritChain = {
 					type = 'toggle',
 					name = "Hide non crits on big crit chain",
 					desc = "Temporarly hide normal hits if having rapid flow of critical strikes",
-					get = function() return ClassicNumbers.db.global.hideNonCritsIfBigCritChain; end,
-					set = function(_, newValue) ClassicNumbers.db.global.hideNonCritsIfBigCritChain = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.hideNonCritsIfBigCritChain; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.hideNonCritsIfBigCritChain = newValue; end,
 					order = 0,
 					width = "full",
 				},
@@ -809,8 +809,8 @@ local menu = {
 					min = 0,
 					max = 72,
 					step = 3,
-					get = function() return ClassicNumbers.db.global.critSize; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critSize = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critSize; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critSize = newValue; end,
 					order = 1,
 				},
 
@@ -821,8 +821,8 @@ local menu = {
 					min = -150,
 					max = 150,
 					step = 10,
-					get = function() return ClassicNumbers.db.global.critsOffsetX; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critsOffsetX = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critsOffsetX; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critsOffsetX = newValue; end,
 					order = 2,
 				},
 				critsOffsetY = {
@@ -832,8 +832,8 @@ local menu = {
 					min = -150,
 					max = 150,
 					step = 10,
-					get = function() return ClassicNumbers.db.global.critsOffsetY; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critsOffsetY = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critsOffsetY; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critsOffsetY = newValue; end,
 					order = 3,
 				},
 
@@ -844,8 +844,8 @@ local menu = {
 					min = 0,
 					max = 1,
 					step = 0.1,
-					get = function() return ClassicNumbers.db.global.critsAlpha; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critsAlpha = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critsAlpha; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critsAlpha = newValue; end,
 					order = 5,
 				},
 				
@@ -855,8 +855,8 @@ local menu = {
 					min = 0,
 					max = 5,
 					step = 0.25,
-					get = function() return ClassicNumbers.db.global.critAnimationDuration; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critAnimationDuration = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critAnimationDuration; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critAnimationDuration = newValue; end,
 					order = 6,
 				},
 
@@ -865,10 +865,10 @@ local menu = {
 					name = "Small crits filter",
 					desc = "Crits below this value will be displayed as if it was a non crit",
 					min = 0,
-					max = 999999,
+					max = 9999999,
 					step = 50,
-					get = function() return ClassicNumbers.db.global.smallCritsFilter; end,
-					set = function(_, newValue) ClassicNumbers.db.global.smallCritsFilter = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.smallCritsFilter; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.smallCritsFilter = newValue; end,
 					order = 7,
 				},
 				maxCritNumbersPerTarget = {
@@ -878,8 +878,8 @@ local menu = {
 					min = 1,
 					max = 5,
 					step = 1,
-					get = function() return ClassicNumbers.db.global.maxCritNumbersPerTarget; end,
-					set = function(_, newValue) ClassicNumbers.db.global.maxCritNumbersPerTarget = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.maxCritNumbersPerTarget; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.maxCritNumbersPerTarget = newValue; end,
 					order = 4,
 				},	
 			}
@@ -890,14 +890,14 @@ local menu = {
             name = "Crit sound effect",
             order = 6,
             inline = true,
-            disabled = function() return not ClassicNumbers.db.global.enabled; end;
+            disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
 				critSoundEnabled = {
 					type = 'toggle',
 					name = "Enabled",
 					desc = "Enable playing a sound effect when doing a critical strike above the threshold",
-					get = function() return ClassicNumbers.db.global.critSoundEnabled; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critSoundEnabled = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critSoundEnabled; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critSoundEnabled = newValue; end,
 					order = 0,
 					width = "full",
 				},
@@ -905,21 +905,21 @@ local menu = {
 					type = 'range',
 					name = "Damage Threshold to play sound",
 					desc = "The critical strike's damage should be higher than X to play the sound",
-					disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.critSoundEnabled; end;
+					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.critSoundEnabled; end;
 					min = 0,
-					max = 999999,
+					max = 9999999,
 					step = 50,
-					get = function() return ClassicNumbers.db.global.critSoundThreshold; end,
-					set = function(_, newValue) ClassicNumbers.db.global.critSoundThreshold = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.critSoundThreshold; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.critSoundThreshold = newValue; end,
 					width = "full",
 					order = 1,
 				},
 				critSoundChannel = {
                     type = 'select',
                     name = "Channel",
-					disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.critSoundEnabled; end;
-                    get = function() return ClassicNumbers.db.global.critSoundChannel; end,
-                    set = function(_, newValue) ClassicNumbers.db.global.critSoundChannel = newValue; end,
+					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.critSoundEnabled; end;
+                    get = function() return ClassicNumbersEx.db.global.critSoundChannel; end,
+                    set = function(_, newValue) ClassicNumbersEx.db.global.critSoundChannel = newValue; end,
                     values = soundChannels,
 					width = "full",
                     order = 2,
@@ -932,14 +932,14 @@ local menu = {
             name = "HUGE Crit sound effect",
             order = 7,
             inline = true,
-            disabled = function() return not ClassicNumbers.db.global.enabled; end;
+            disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
 				hugeCritSoundEnabled = {
 					type = 'toggle',
 					name = "Enabled",
 					desc = "Enable playing a bigger sound effect when doing a critical strike above the threshold",
-					get = function() return ClassicNumbers.db.global.hugeCritSoundEnabled; end,
-					set = function(_, newValue) ClassicNumbers.db.global.hugeCritSoundEnabled = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.hugeCritSoundEnabled; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.hugeCritSoundEnabled = newValue; end,
 					order = 0,
 					width = "full",
 				},
@@ -947,21 +947,21 @@ local menu = {
 					type = 'range',
 					name = "Damage Threshold to play sound",
 					desc = "The critical strike's damage should be higher than X to play the sound",
-					disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.hugeCritSoundEnabled; end;
+					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.hugeCritSoundEnabled; end;
 					min = 0,
-					max = 999999,
+					max = 9999999,
 					step = 50,
-					get = function() return ClassicNumbers.db.global.hugeCritSoundThreshold; end,
-					set = function(_, newValue) ClassicNumbers.db.global.hugeCritSoundThreshold = newValue; end,
+					get = function() return ClassicNumbersEx.db.global.hugeCritSoundThreshold; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.hugeCritSoundThreshold = newValue; end,
 					width = "full",
 					order = 1,
 				},
 				hugeCritSoundChannel = {
                     type = 'select',
                     name = "Channel",
-					disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.hugeCritSoundEnabled; end;
-                    get = function() return ClassicNumbers.db.global.hugeCritSoundChannel; end,
-                    set = function(_, newValue) ClassicNumbers.db.global.hugeCritSoundChannel = newValue; end,
+					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.hugeCritSoundEnabled; end;
+                    get = function() return ClassicNumbersEx.db.global.hugeCritSoundChannel; end,
+                    set = function(_, newValue) ClassicNumbersEx.db.global.hugeCritSoundChannel = newValue; end,
                     values = soundChannels,
 					width = "full",
                     order = 2,
@@ -974,14 +974,14 @@ local menu = {
            -- name = "MONSTER Crit sound effect",
           -- order = 7,
            -- inline = true,
-           -- disabled = function() return not ClassicNumbers.db.global.enabled; end;
+           -- disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
            -- args = {
 				-- monsterCritSoundEnabled = {
 					-- type = 'toggle',
 					-- name = "Enabled",
 					-- desc = "Enable playing a bigger sound effect when doing a critical strike above the threshold",
-					-- get = function() return ClassicNumbers.db.global.monsterCritSoundEnabled; end,
-					-- set = function(_, newValue) ClassicNumbers.db.global.monsterCritSoundEnabled = newValue; end,
+					-- get = function() return ClassicNumbersEx.db.global.monsterCritSoundEnabled; end,
+					-- set = function(_, newValue) ClassicNumbersEx.db.global.monsterCritSoundEnabled = newValue; end,
 					-- order = 0,
 					-- width = "full",
 				-- },
@@ -989,21 +989,21 @@ local menu = {
 					-- type = 'range',
 					-- name = "Damage Threshold to play sound",
 					-- desc = "The critical strike's damage should be higher than X to play the sound",
-					-- disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.monsterCritSoundEnabled; end;
+					-- disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.monsterCritSoundEnabled; end;
 					-- min = 0,
-					-- max = 999999,
+					-- max = 9999999,
 					-- step = 50,
-					-- get = function() return ClassicNumbers.db.global.monsterCritSoundThreshold; end,
-					-- set = function(_, newValue) ClassicNumbers.db.global.monsterCritSoundThreshold = newValue; end,
+					-- get = function() return ClassicNumbersEx.db.global.monsterCritSoundThreshold; end,
+					-- set = function(_, newValue) ClassicNumbersEx.db.global.monsterCritSoundThreshold = newValue; end,
 					-- width = "full",
 					-- order = 1,
 				-- },
 				-- monsterCritSoundChannel = {
                     -- type = 'select',
                     -- name = "Channel",
-					-- disabled = function() return not ClassicNumbers.db.global.enabled or not ClassicNumbers.db.global.monsterCritSoundEnabled; end;
-                    -- get = function() return ClassicNumbers.db.global.monsterCritSoundChannel; end,
-                    -- set = function(_, newValue) ClassicNumbers.db.global.monsterCritSoundChannel = newValue; end,
+					-- disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.monsterCritSoundEnabled; end;
+                    -- get = function() return ClassicNumbersEx.db.global.monsterCritSoundChannel; end,
+                    -- set = function(_, newValue) ClassicNumbersEx.db.global.monsterCritSoundChannel = newValue; end,
                     -- values = soundChannels,
 					-- width = "full",
                     -- order = 2,
@@ -1102,12 +1102,12 @@ function GetClosestDamageNumberYValueFrom(fs)
 	return closestFontString;
 end
 
-function ClassicNumbers:OpenMenu()
+function ClassicNumbersEx:OpenMenu()
     -- just open to the frame, double call because blizz bug
-    LibStub("AceConfigDialog-3.0"):Open("ClassicNumbers");
+    LibStub("AceConfigDialog-3.0"):Open("ClassicNumbersEx");
 end
 
-function ClassicNumbers:RegisterMenu()
-    LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("ClassicNumbers", menu);
-    self.menu = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ClassicNumbers", "ClassicNumbers");
+function ClassicNumbersEx:RegisterMenu()
+    LibStub("AceConfigRegistry-3.0"):RegisterOptionsTable("ClassicNumbersEx", menu);
+    self.menu = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("ClassicNumbersEx", "ClassicNumbersEx");
 end
