@@ -1,7 +1,7 @@
 ## Interface: 110107
-## Version: 1.3.1
+## Version: 1.3.2
 ## Title: ClassicNumbersEx
-## Author: zeldarsprod, spliddo
+## Author: zeldarsprod, Limitedby
 ## SavedVariables: ClassicNumbersExDB
 ## Notes: Vanilla style damage popping.
 ## OptionalDeps: Ace3, LibEasing

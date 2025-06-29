@@ -61,6 +61,8 @@ local defaults = {
 		monsterCritSoundEnabled = false,
 		monsterCritSoundChannel = "Dialog",
 		monsterCritSoundThreshold = 8000,
+		minimumDamageEnabled = false,
+		minimumDamageThreshold = 0,
     },
 };
 
@@ -462,6 +464,13 @@ local function commaSeperate(number)
 end
 
 function ClassicNumbersEx:DamageEvent(guid, spellID, amount, school, crit, spellName)
+	-- Check if the damage is below the minimum threshold
+	if (self.db.global.minimumDamageEnabled) then
+		if amount < self.db.global.minimumDamageThreshold then
+			return; -- Don't display the damage number
+		end
+	end
+
     local text, animation, pow, size, icon;
 	local autoattack = not spellID or spellID == 75;
 
@@ -777,8 +786,8 @@ local menu = {
 					name = "Small hits filter",
 					desc = "Hide numbers below this value",
 					min = 0,
-					max = 9999999,
-					step = 50,
+					max = 10000000,
+					step = 1000,
 					get = function() return ClassicNumbersEx.db.global.smallHitsFilter; end,
 					set = function(_, newValue) ClassicNumbersEx.db.global.smallHitsFilter = newValue; end,
 					order = 7,
@@ -865,8 +874,8 @@ local menu = {
 					name = "Small crits filter",
 					desc = "Crits below this value will be displayed as if it was a non crit",
 					min = 0,
-					max = 9999999,
-					step = 50,
+					max = 10000000,
+					step = 1000,
 					get = function() return ClassicNumbersEx.db.global.smallCritsFilter; end,
 					set = function(_, newValue) ClassicNumbersEx.db.global.smallCritsFilter = newValue; end,
 					order = 7,
@@ -885,10 +894,42 @@ local menu = {
 			}
 		},
 		
+		minimumDamageOptions = {
+			type = 'group',
+			name = "Minimum Damage Threshold",
+			order = 6,
+			inline = true,
+			disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
+			args = {
+				minimumDamageEnabled = {
+					type = 'toggle',
+					name = "Enabled",
+					desc = "Enable the minimum damage threshold",
+					get = function() return ClassicNumbersEx.db.global.minimumDamageEnabled; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.minimumDamageEnabled = newValue; end,
+					order = 0,
+					width = "full",
+				},
+				minimumDamageThreshold = {
+					type = 'range',
+					name = "Don't display damage below this amount",
+					desc = "Damage below this value will not be displayed",
+					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.minimumDamageEnabled; end;
+					min = 0,
+					max = 1000000,
+					step = 1000,
+					get = function() return ClassicNumbersEx.db.global.minimumDamageThreshold; end,
+					set = function(_, newValue) ClassicNumbersEx.db.global.minimumDamageThreshold = newValue; end,
+					order = 1,
+					width = "full",
+				},
+			},
+		},
+
 		CritSound = {
             type = 'group',
             name = "Crit sound effect",
-            order = 6,
+            order = 7,
             inline = true,
             disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
@@ -907,8 +948,8 @@ local menu = {
 					desc = "The critical strike's damage should be higher than X to play the sound",
 					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.critSoundEnabled; end;
 					min = 0,
-					max = 9999999,
-					step = 50,
+					max = 10000000,
+					step = 1000,
 					get = function() return ClassicNumbersEx.db.global.critSoundThreshold; end,
 					set = function(_, newValue) ClassicNumbersEx.db.global.critSoundThreshold = newValue; end,
 					width = "full",
@@ -930,7 +971,7 @@ local menu = {
 		HugeCritSound = {
             type = 'group',
             name = "HUGE Crit sound effect",
-            order = 7,
+            order = 8,
             inline = true,
             disabled = function() return not ClassicNumbersEx.db.global.enabled; end;
             args = {
@@ -949,8 +990,8 @@ local menu = {
 					desc = "The critical strike's damage should be higher than X to play the sound",
 					disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.hugeCritSoundEnabled; end;
 					min = 0,
-					max = 9999999,
-					step = 50,
+					max = 10000000,
+					step = 1000,
 					get = function() return ClassicNumbersEx.db.global.hugeCritSoundThreshold; end,
 					set = function(_, newValue) ClassicNumbersEx.db.global.hugeCritSoundThreshold = newValue; end,
 					width = "full",
@@ -991,8 +1032,8 @@ local menu = {
 					-- desc = "The critical strike's damage should be higher than X to play the sound",
 					-- disabled = function() return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.monsterCritSoundEnabled; end;
 					-- min = 0,
-					-- max = 9999999,
-					-- step = 50,
+					-- max = 10000000,
+					-- step = 1000,
 					-- get = function() return ClassicNumbersEx.db.global.monsterCritSoundThreshold; end,
 					-- set = function(_, newValue) ClassicNumbersEx.db.global.monsterCritSoundThreshold = newValue; end,
 					-- width = "full",
