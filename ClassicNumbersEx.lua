@@ -2,6 +2,53 @@
 local animating = ClassicNumbersEx.animating
 local soundChannels = ClassicNumbersEx.soundChannels
 
+-- Number conversion utility functions
+local function ConvertToNumber(text)
+	if not text or text == "" then
+		return 0
+	end
+
+	-- Remove whitespace and convert to lowercase
+	text = string.gsub(string.lower(text), "%s", "")
+
+	-- Extract number and suffix
+	local number, suffix = string.match(text, "^([%d%.]+)([km]?)$")
+
+	if not number then
+		-- Try to parse as plain number
+		local plainNumber = tonumber(text)
+		return plainNumber or 0
+	end
+
+	number = tonumber(number) or 0
+
+	if suffix == "k" then
+		return math.floor(number * 1000)
+	elseif suffix == "m" then
+		return math.floor(number * 1000000)
+	else
+		return math.floor(number)
+	end
+end
+
+local function ConvertFromNumber(number)
+	if not number or number == 0 then
+		return "0"
+	end
+
+	if number >= 1000000 and number % 1000000 == 0 then
+		return string.format("%.0fm", number / 1000000)
+	elseif number >= 1000000 then
+		return string.format("%.1fm", number / 1000000)
+	elseif number >= 1000 and number % 1000 == 0 then
+		return string.format("%.0fk", number / 1000)
+	elseif number >= 1000 then
+		return string.format("%.1fk", number / 1000)
+	else
+		return tostring(number)
+	end
+end
+
 -------------
 -- OPTIONS --
 -------------
@@ -69,7 +116,7 @@ local menu = {
 				commaSeperate = {
 					type = "toggle",
 					name = "Comma separate numbers",
-					desc = "Example : a 1200 hit will be displayed as 1,200. Classic wow don't use commas",
+					desc = "Example : a 1200 hit will be displayed as 1,200. Classic WoW doesn't use commas",
 					get = function()
 						return ClassicNumbersEx.db.global.commaSeperate
 					end,
@@ -220,19 +267,17 @@ local menu = {
 					order = 6,
 				},
 				smallHitsFilter = {
-					type = "range",
+					type = "input",
 					name = "Small hits filter",
-					desc = "Hide numbers below this value",
-					min = 0,
-					max = 10000000,
-					step = 1000,
+					desc = "Hide numbers below this value (supports k/m suffixes, e.g., 20k, 2m)",
 					get = function()
-						return ClassicNumbersEx.db.global.smallHitsFilter
+						return ConvertFromNumber(ClassicNumbersEx.db.global.smallHitsFilter)
 					end,
 					set = function(_, newValue)
-						ClassicNumbersEx.db.global.smallHitsFilter = newValue
+						ClassicNumbersEx.db.global.smallHitsFilter = ConvertToNumber(newValue)
 					end,
 					order = 7,
+					width = "half",
 				},
 			},
 		},
@@ -338,19 +383,17 @@ local menu = {
 				},
 
 				smallCritsFilter = {
-					type = "range",
+					type = "input",
 					name = "Small crits filter",
-					desc = "Crits below this value will be displayed as if it was a non crit",
-					min = 0,
-					max = 10000000,
-					step = 1000,
+					desc = "Crits below this value will be displayed as if it was a non crit (supports k/m suffixes, e.g., 20k, 2m)",
 					get = function()
-						return ClassicNumbersEx.db.global.smallCritsFilter
+						return ConvertFromNumber(ClassicNumbersEx.db.global.smallCritsFilter)
 					end,
 					set = function(_, newValue)
-						ClassicNumbersEx.db.global.smallCritsFilter = newValue
+						ClassicNumbersEx.db.global.smallCritsFilter = ConvertToNumber(newValue)
 					end,
 					order = 7,
+					width = "half",
 				},
 				maxCritNumbersPerTarget = {
 					type = "range",
@@ -393,24 +436,21 @@ local menu = {
 					width = "full",
 				},
 				minimumDamageThreshold = {
-					type = "range",
+					type = "input",
 					name = "Don't display damage below this amount",
-					desc = "Damage below this value will not be displayed",
+					desc = "Damage below this value will not be displayed (supports k/m suffixes, e.g., 20k, 2m)",
 					disabled = function()
 						return not ClassicNumbersEx.db.global.enabled
 							or not ClassicNumbersEx.db.global.minimumDamageEnabled
 					end,
-					min = 0,
-					max = 1000000,
-					step = 1000,
 					get = function()
-						return ClassicNumbersEx.db.global.minimumDamageThreshold
+						return ConvertFromNumber(ClassicNumbersEx.db.global.minimumDamageThreshold)
 					end,
 					set = function(_, newValue)
-						ClassicNumbersEx.db.global.minimumDamageThreshold = newValue
+						ClassicNumbersEx.db.global.minimumDamageThreshold = ConvertToNumber(newValue)
 					end,
 					order = 1,
-					width = "full",
+					width = 250,
 				},
 			},
 		},
@@ -438,22 +478,19 @@ local menu = {
 					width = "full",
 				},
 				critSoundThreshold = {
-					type = "range",
+					type = "input",
 					name = "Damage Threshold to play sound",
-					desc = "The critical strike's damage should be higher than X to play the sound",
+					desc = "The critical strike's damage should be higher than X to play the sound (supports k/m suffixes, e.g., 20k, 2m)",
 					disabled = function()
 						return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.critSoundEnabled
 					end,
-					min = 0,
-					max = 10000000,
-					step = 1000,
 					get = function()
-						return ClassicNumbersEx.db.global.critSoundThreshold
+						return ConvertFromNumber(ClassicNumbersEx.db.global.critSoundThreshold)
 					end,
 					set = function(_, newValue)
-						ClassicNumbersEx.db.global.critSoundThreshold = newValue
+						ClassicNumbersEx.db.global.critSoundThreshold = ConvertToNumber(newValue)
 					end,
-					width = "full",
+					width = 250,
 					order = 1,
 				},
 				critSoundChannel = {
@@ -498,23 +535,20 @@ local menu = {
 					width = "full",
 				},
 				hugeCritSoundThreshold = {
-					type = "range",
+					type = "input",
 					name = "Damage Threshold to play sound",
-					desc = "The critical strike's damage should be higher than X to play the sound",
+					desc = "The critical strike's damage should be higher than X to play the sound (supports k/m suffixes, e.g., 20k, 2m)",
 					disabled = function()
 						return not ClassicNumbersEx.db.global.enabled
 							or not ClassicNumbersEx.db.global.hugeCritSoundEnabled
 					end,
-					min = 0,
-					max = 10000000,
-					step = 1000,
 					get = function()
-						return ClassicNumbersEx.db.global.hugeCritSoundThreshold
+						return ConvertFromNumber(ClassicNumbersEx.db.global.hugeCritSoundThreshold)
 					end,
 					set = function(_, newValue)
-						ClassicNumbersEx.db.global.hugeCritSoundThreshold = newValue
+						ClassicNumbersEx.db.global.hugeCritSoundThreshold = ConvertToNumber(newValue)
 					end,
-					width = "full",
+					width = 250,
 					order = 1,
 				},
 				hugeCritSoundChannel = {
