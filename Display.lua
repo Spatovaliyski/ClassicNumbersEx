@@ -47,9 +47,6 @@ function ClassicNumbersEx:DamageEvent(guid, spellID, amount, school, crit, spell
 		pow = false
 		size = self.db.global.size * 1.5
 	end
-	if not pow and amount < self.db.global.smallHitsFilter or size == 0 then
-		return
-	end
 
 	-- truncate
 	if self.db.global.truncate and amount >= 1000000 then

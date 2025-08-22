@@ -39,7 +39,6 @@ local defaults = {
 		critsOffsetX = 0,
 		nonCritsOffsetY = 0,
 		critsOffsetY = 0,
-		smallHitsFilter = 0,
 		smallCritsFilter = 0,
 		defaultColor = "ffffff",
 		defaultAbilityColor = "FFEE00",
