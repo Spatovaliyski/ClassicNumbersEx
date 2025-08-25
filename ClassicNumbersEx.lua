@@ -573,6 +573,355 @@ local menu = {
 				},
 			},
 		},
+
+		healing = {
+			type = "group",
+			name = "Healing",
+			order = 3,
+			args = {
+				healingGeneral = {
+					type = "group",
+					name = "General Healing Options",
+					order = 1,
+					inline = true,
+					disabled = function()
+						return not ClassicNumbersEx.db.global.enabled
+					end,
+					args = {
+						healingEnabled = {
+							type = "toggle",
+							name = "Enable Healing Numbers",
+							desc = "Enable healing numbers display",
+							get = function()
+								return ClassicNumbersEx.db.global.healingEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healingEnabled = newValue
+							end,
+							order = 0,
+							width = "full",
+						},
+						showFriendlyNameplates = {
+							type = "toggle",
+							name = "Enable Friendly Nameplates",
+							desc = "Toggle friendly nameplates on/off for ALL targets (changes interface setting)\nREQUIRED: Must be enabled to see healing numbers on any friendly targets\nThis shows nameplates for all friendlies, not just your current target",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+							end,
+							get = function()
+								return GetCVar("nameplateShowFriends") == "1"
+							end,
+							set = function(_, newValue)
+								if newValue then
+									SetCVar("nameplateShowFriends", "1")
+									-- Also enable always show nameplates to ensure they appear
+									SetCVar("nameplateShowAll", "1")
+								else
+									SetCVar("nameplateShowFriends", "0")
+								end
+							end,
+							order = 1,
+							width = "full",
+						},
+						showFriendlyNameplatesPets = {
+							type = "toggle",
+							name = "Enable Friendly Pet Nameplates",
+							desc = "Toggle friendly pet nameplates on/off (changes interface setting)",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+							end,
+							get = function()
+								return GetCVar("nameplateShowFriendlyPets") == "1"
+							end,
+							set = function(_, newValue)
+								if newValue then
+									SetCVar("nameplateShowFriendlyPets", "1")
+								else
+									SetCVar("nameplateShowFriendlyPets", "0")
+								end
+							end,
+							order = 1.5,
+							width = "full",
+						},
+						personalHealing = {
+							type = "toggle",
+							name = "Show Personal Healing",
+							desc = "Show healing numbers when you heal yourself",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+							end,
+							get = function()
+								return ClassicNumbersEx.db.global.personalHealing
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.personalHealing = newValue
+							end,
+							order = 2,
+							width = "full",
+						},
+						personalHealingOffsetX = {
+							type = "range",
+							name = "Personal Healing Position X",
+							desc = "Horizontal offset for personal healing numbers",
+							min = -500,
+							max = 500,
+							step = 10,
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.personalHealing
+							end,
+							get = function()
+								return ClassicNumbersEx.db.global.personalHealingOffsetX
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.personalHealingOffsetX = newValue
+							end,
+							order = 2.1,
+						},
+						personalHealingOffsetY = {
+							type = "range",
+							name = "Personal Healing Position Y",
+							desc = "Vertical offset for personal healing numbers",
+							min = -500,
+							max = 500,
+							step = 10,
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.personalHealing
+							end,
+							get = function()
+								return ClassicNumbersEx.db.global.personalHealingOffsetY
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.personalHealingOffsetY = newValue
+							end,
+							order = 2.2,
+						},
+					},
+				},
+
+				healingTargets = {
+					type = "group",
+					name = "Healing Target Types",
+					order = 3,
+					inline = true,
+					disabled = function()
+						return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.healingEnabled
+					end,
+					args = {
+						healingFriendlyPlayersEnabled = {
+							type = "toggle",
+							name = "Friendly Players",
+							desc = "Show healing numbers on friendly players",
+							get = function()
+								return ClassicNumbersEx.db.global.healingFriendlyPlayersEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healingFriendlyPlayersEnabled = newValue
+							end,
+							order = 1,
+							width = "full",
+						},
+						healingFriendlyNPCsEnabled = {
+							type = "toggle",
+							name = "Friendly NPCs",
+							desc = "Show healing numbers on friendly NPCs",
+							get = function()
+								return ClassicNumbersEx.db.global.healingFriendlyNPCsEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healingFriendlyNPCsEnabled = newValue
+							end,
+							order = 2,
+							width = "full",
+						},
+						healingFriendlyPetsEnabled = {
+							type = "toggle",
+							name = "Friendly Pets",
+							desc = "Show healing numbers on friendly pets and minions",
+							get = function()
+								return ClassicNumbersEx.db.global.healingFriendlyPetsEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healingFriendlyPetsEnabled = newValue
+							end,
+							order = 3,
+							width = "full",
+						},
+					},
+				},
+
+				minimumHealingOptions = {
+					type = "group",
+					name = "Minimum Healing Threshold",
+					order = 4,
+					inline = true,
+					disabled = function()
+						return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.healingEnabled
+					end,
+					args = {
+						minimumHealingEnabled = {
+							type = "toggle",
+							name = "Enabled",
+							desc = "Enable the minimum healing threshold",
+							get = function()
+								return ClassicNumbersEx.db.global.minimumHealingEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.minimumHealingEnabled = newValue
+							end,
+							order = 0,
+							width = "full",
+						},
+						minimumHealingThreshold = {
+							type = "input",
+							name = "Don't display healing below this amount",
+							desc = "Healing below this value will not be displayed (supports k/m suffixes, e.g., 20k, 2m)",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.minimumHealingEnabled
+							end,
+							get = function()
+								return ConvertFromNumber(ClassicNumbersEx.db.global.minimumHealingThreshold)
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.minimumHealingThreshold = ConvertToNumber(newValue)
+							end,
+							order = 1,
+							width = 250,
+						},
+					},
+				},
+
+				HealSound = {
+					type = "group",
+					name = "Heal sound effect",
+					order = 5,
+					inline = true,
+					disabled = function()
+						return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.healingEnabled
+					end,
+					args = {
+						healSoundEnabled = {
+							type = "toggle",
+							name = "Enabled",
+							desc = "Enable playing a sound effect when doing a critical heal above the threshold",
+							get = function()
+								return ClassicNumbersEx.db.global.healSoundEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healSoundEnabled = newValue
+							end,
+							order = 0,
+							width = "full",
+						},
+						healSoundThreshold = {
+							type = "input",
+							name = "Healing Threshold to play sound",
+							desc = "The critical heal's amount should be higher than X to play the sound (supports k/m suffixes, e.g., 20k, 2m)",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.healSoundEnabled
+							end,
+							get = function()
+								return ConvertFromNumber(ClassicNumbersEx.db.global.healSoundThreshold)
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healSoundThreshold = ConvertToNumber(newValue)
+							end,
+							width = 250,
+							order = 1,
+						},
+						healSoundChannel = {
+							type = "select",
+							name = "Channel",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.healSoundEnabled
+							end,
+							get = function()
+								return ClassicNumbersEx.db.global.healSoundChannel
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.healSoundChannel = newValue
+							end,
+							values = soundChannels,
+							width = "full",
+							order = 2,
+						},
+					},
+				},
+
+				HugeHealSound = {
+					type = "group",
+					name = "HUGE Heal sound effect",
+					order = 6,
+					inline = true,
+					disabled = function()
+						return not ClassicNumbersEx.db.global.enabled or not ClassicNumbersEx.db.global.healingEnabled
+					end,
+					args = {
+						hugeHealSoundEnabled = {
+							type = "toggle",
+							name = "Enabled",
+							desc = "Enable playing a bigger sound effect when doing a critical heal above the threshold",
+							get = function()
+								return ClassicNumbersEx.db.global.hugeHealSoundEnabled
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.hugeHealSoundEnabled = newValue
+							end,
+							order = 0,
+							width = "full",
+						},
+						hugeHealSoundThreshold = {
+							type = "input",
+							name = "Healing Threshold to play sound",
+							desc = "The critical heal's amount should be higher than X to play the sound (supports k/m suffixes, e.g., 20k, 2m)",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.hugeHealSoundEnabled
+							end,
+							get = function()
+								return ConvertFromNumber(ClassicNumbersEx.db.global.hugeHealSoundThreshold)
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.hugeHealSoundThreshold = ConvertToNumber(newValue)
+							end,
+							width = 250,
+							order = 1,
+						},
+						hugeHealSoundChannel = {
+							type = "select",
+							name = "Channel",
+							disabled = function()
+								return not ClassicNumbersEx.db.global.enabled
+									or not ClassicNumbersEx.db.global.healingEnabled
+									or not ClassicNumbersEx.db.global.hugeHealSoundEnabled
+							end,
+							get = function()
+								return ClassicNumbersEx.db.global.hugeHealSoundChannel
+							end,
+							set = function(_, newValue)
+								ClassicNumbersEx.db.global.hugeHealSoundChannel = newValue
+							end,
+							values = soundChannels,
+							width = "full",
+							order = 2,
+						},
+					},
+				},
+			},
+		},
 	},
 }
 

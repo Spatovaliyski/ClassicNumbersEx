@@ -26,6 +26,7 @@ local defaultFont = "Friz Quadrata TT"
 local defaults = {
 	global = {
 		enabled = true,
+		personal = false,
 		useLegacyOverlapHandler = false,
 		font = defaultFont,
 		truncate = false,
@@ -61,6 +62,22 @@ local defaults = {
 		monsterCritSoundThreshold = 8000,
 		minimumDamageEnabled = false,
 		minimumDamageThreshold = 0,
+		-- Healing options
+		healingEnabled = true,
+		healingFriendlyNPCsEnabled = true,
+		healingFriendlyPlayersEnabled = true,
+		healingFriendlyPetsEnabled = true,
+		healSoundEnabled = false,
+		healSoundChannel = "Dialog",
+		healSoundThreshold = 250,
+		hugeHealSoundEnabled = false,
+		hugeHealSoundChannel = "Dialog",
+		hugeHealSoundThreshold = 3000,
+		minimumHealingEnabled = false,
+		minimumHealingThreshold = 0,
+		personalHealing = true,
+		personalHealingOffsetX = 0,
+		personalHealingOffsetY = 0,
 	},
 }
 
@@ -250,6 +267,9 @@ function ClassicNumbersEx:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _
 						...
 				end
 				self:DamageEvent(destGUID, spellID, amount, school, critical, spellName)
+			elseif string.find(clue, "_HEAL") and ClassicNumbersEx.db.global.healingEnabled then
+				local spellID, spellName, spellSchool, amount, overhealing, absorbed, critical = ...
+				self:HealingEvent(destGUID, spellID, amount, spellSchool, critical, spellName)
 			end
 		end
 	elseif
@@ -272,6 +292,9 @@ function ClassicNumbersEx:CombatFilter(_, clue, _, sourceGUID, _, sourceFlags, _
 						...
 				end
 				self:DamageEvent(destGUID, spellID, amount, "pet", critical, spellName)
+			elseif string.find(clue, "_HEAL") and ClassicNumbersEx.db.global.healingEnabled then
+				local spellID, spellName, spellSchool, amount, overhealing, absorbed, critical = ...
+				self:HealingEvent(destGUID, spellID, amount, spellSchool, critical, spellName)
 			end
 		end
 	end
@@ -384,3 +407,50 @@ ClassicNumbersEx.recycleFontString = recycleFontString
 ClassicNumbersEx.DAMAGE_TYPE_COLORS = DAMAGE_TYPE_COLORS
 ClassicNumbersEx.guidToUnit = guidToUnit
 ClassicNumbersEx.soundChannels = soundChannels
+
+-- HEALING EVENT HANDLER
+function ClassicNumbersEx:HealingEvent(destGUID, spellID, amount, spellSchool, critical, spellName)
+	if self.db.global.minimumHealingEnabled then
+		if amount < self.db.global.minimumHealingThreshold then
+			return
+		end
+	end
+
+	local destUnit = guidToUnit[destGUID]
+
+	if destGUID == playerGUID then
+		if self.db.global.personalHealing then
+			self:HealingDisplay(destGUID, spellID, amount, spellSchool, critical, spellName)
+		end
+
+		if critical then
+			self:HandleHealSound(amount)
+		end
+		return
+	end
+
+	if destUnit then
+		local shouldShow = false
+
+		if not UnitIsFriend("player", destUnit) then
+			return
+		end
+
+		if UnitIsPlayer(destUnit) then
+			shouldShow = self.db.global.healingFriendlyPlayersEnabled
+		elseif UnitPlayerControlled(destUnit) then
+			shouldShow = self.db.global.healingFriendlyPetsEnabled
+		else
+			-- This covers NPCs
+			shouldShow = self.db.global.healingFriendlyNPCsEnabled
+		end
+
+		if shouldShow then
+			self:HealingDisplay(destGUID, spellID, amount, spellSchool, critical, spellName)
+
+			if critical then
+				self:HandleHealSound(amount)
+			end
+		end
+	end
+end
